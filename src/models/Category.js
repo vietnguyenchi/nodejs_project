@@ -13,12 +13,17 @@ const categorySchema = new mongoose.Schema({
         unique: true,
         defaultValue: "Uncategorized"
     },
-    products: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Product"
-        }
-    ]
+    description: {
+        type: String,
+    },
+    isHidden: {
+        type: Boolean,
+        default: false,
+    },
+    products: {
+        type: [String],
+        default: [],
+    }
 }, { versionKey: false, timestamps: true });
 
 export default mongoose.model('Category', categorySchema);
