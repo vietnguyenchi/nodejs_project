@@ -12,16 +12,11 @@ export const signUp = async (req, res) => {
     try {
         // Bước 1: Validate dữ liệu người dùng
         const { error } = signUpValidator.validate(req.body, { abortEarly: false });
-        if (error) {
-            const errors = error.details.map(error => error.message);
-            return res.status(400).json({ message: errors });
-        }
+        if (error) return res.status(400).json({ message: error.details[0].message });
 
         // Bước 2: Kiểm tra xem email đã tồn tại trong hệ thống hay chưa
         const userExists = await User.findOne({ email: req.body.email });
-        if (userExists) {
-            return res.status(400).json({ message: 'Email already registered' });
-        }
+        if (userExists) return res.status(400).json({ message: 'Email already registered' });
 
         // Bước 3: Mã hóa password
         const hashedPassword = await bcryptjs.hash(req.body.password, 10);
@@ -30,11 +25,8 @@ export const signUp = async (req, res) => {
         const user = await User.create({ ...req.body, password: hashedPassword })
 
         // Bước 5: Thông báo cho người dùng đăng ký
-        // xóa mật khẩu trước khi gửi đi
-        user.password = undefined;
+        user.password = undefined; // Xóa mật khẩu trước khi gửi đi
         return res.status(200).json({ message: "Registration successful", user: user });
-
-        // return res.status(200).json({ message: "Registration successful", data: req.body.email });
     } catch (error) {
         return res.status(500).json({ name: error.name, message: error.message });
     }
@@ -54,24 +46,17 @@ export const getUser = async (req, res) => {
 
 export const signIn = async (req, res) => {
     try {
-        // Bước 1: Validate dât từ phía client
+        // Bước 1: Validate data từ phía client
         const { error } = signInValidator.validate(req.body, { abortEarly: false });
-        if (error) {
-            const errors = error.details.map(error => error.message);
-            return res.status(400).json({ message: errors });
-        }
+        if (error) return res.status(400).json({ message: error.details[0].message });
 
         // Bước 2: Kiểm tra email đã tồn tại hay chưa
         const user = await User.findOne({ email: req.body.email });
-        if (!user) {
-            return res.status(404).json({ message: 'Email not found!' });
-        }
+        if (!user) return res.status(404).json({ message: 'Email not found!' });
 
         // Bước 3: Find user theo email
         const isMatch = await bcryptjs.compare(req.body.password, user.password);
-        if (!isMatch) {
-            return res.status(404).json({ message: 'Password mismatch!' });
-        }
+        if (!isMatch) return res.status(404).json({ message: 'Password mismatch!' });
 
         // Bước 4: Tạo JWT
         const accessToken = jwt.sign({ _id: user._id }, SECRETE_CODE, { expiresIn: "1d" });
